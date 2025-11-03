@@ -1,0 +1,26 @@
+From 4bb2a8e6cf013b8d319fe81c6ec1366b79e8d278 Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 20:45:22 +0200
+Subject: [PATCH 12/16] fix com.serenegiant.usbcameratest
+ SimpleUVCCameraTextureView
+
+---
+ usbCameraTest/src/main/res/layout/activity_main.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/usbCameraTest/src/main/res/layout/activity_main.xml b/usbCameraTest/src/main/res/layout/activity_main.xml
+index 5ca52e5..cde3702 100644
+--- a/usbCameraTest/src/main/res/layout/activity_main.xml
++++ b/usbCameraTest/src/main/res/layout/activity_main.xml
+@@ -34,7 +34,7 @@
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         android:layout_gravity="center"
+-        android:background="#ff000000" />
++        android:background="@null" />
+ 
+     <ImageButton
+         android:id="@+id/camera_button"
+-- 
+2.47.1
+

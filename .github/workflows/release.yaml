@@ -1,0 +1,145 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+
+  package:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up temurin-jdk-17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ndk-bundle
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          version: 3.29.2
+
+      - name: Setup pub.dev credentials
+        uses: flutter-actions/setup-pubdev-credentials@v1
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}
+
+      - name: Get pub cache location
+        id: get-pub-cache
+        shell: bash
+        run: |
+          echo "pub_cache=$PUB_CACHE" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Pub
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.get-pub-cache.outputs.pub_cache }}
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Inflate Keystore
+        env:
+          ANDROID_JKS: ${{ secrets.ANDROID_JKS }}
+          ANDROID_JKS_SHA256: ${{ secrets.ANDROID_JKS_SHA256 }}
+        run: |
+          JKS_FILE="$(mktemp -p "${RUNNER_TEMP}" -d)/android.jks"
+          echo -n "$ANDROID_JKS" | base64 --decode > "$JKS_FILE"
+
+          if [ "${ANDROID_JKS_SHA256} *-" != "$(cat $JKS_FILE | sha256sum -b)" ]; then
+            exit 1
+          fi
+
+          echo "ANDROID_JKS_FILE=$JKS_FILE" >> $GITHUB_ENV
+
+      - name: Build
+        env:
+          ANDROID_JKS_PASSWORD: ${{ secrets.ANDROID_JKS_PASSWORD }}
+        run: ./gradlew assembleRelease publishToMavenLocal
+
+      - name: Upload lib artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib
+          path: lib/build/outputs/aar/*-release.aar
+
+      - name: Flutter plugin dependencies
+        working-directory: flutter
+        run: |
+          flutter pub get \
+          || exit $?
+
+      - name: Build Flutter example
+        working-directory: flutter/example
+        env:
+          ANDROID_JKS_PASSWORD: ${{ secrets.ANDROID_JKS_PASSWORD }}
+        run: flutter build apk
+
+      - name: Upload Flutter example artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-example
+          path: flutter/example/build/app/outputs/flutter-apk/*-release.apk
+
+      - name: Publish library artifacts
+        env:
+          ANDROID_JKS_PASSWORD: ${{ secrets.ANDROID_JKS_PASSWORD }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+        run: ./gradlew :lib:publish -Puvccamera.version=${{ github.ref_name }}
+
+      - name: Publish Flutter plugin
+        working-directory: flutter
+        run: |
+          sed -i 's/version: 0.0.0-SNAPSHOT/version: ${{ github.ref_name }}/g' pubspec.yaml
+
+          (cd example \
+            && sed -i 's/uvccamera:/uvccamera: ${{ github.ref_name }}/g' pubspec.yaml \
+            && sed -i '/    path: ..\//d' pubspec.yaml \
+            && for EXAMPLE_FILE in pubspec.yaml lib/*.dart; do ( \
+              echo "" >> README.md \
+              && echo "## [${EXAMPLE_FILE}](https://github.com/alexey-pelykh/UVCCamera/blob/main/flutter/example/${EXAMPLE_FILE})" >> README.md \
+              && echo "\`\`\`${EXAMPLE_FILE##*.}" >> README.md \
+              && cat "$EXAMPLE_FILE" >> README.md \
+              && echo "\`\`\`" >> README.md \
+            ); done \
+          )
+
+          # NOTE: https://github.com/dart-lang/pub-dev/issues/8436
+          (cd example \
+            && mv README.md example.md \
+          )
+
+          dart format \
+            --set-exit-if-changed \
+            . \
+          || exit $?
+
+          flutter pub publish --force

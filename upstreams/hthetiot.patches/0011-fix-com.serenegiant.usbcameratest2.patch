@@ -1,0 +1,43 @@
+From 8615e6ac322c407e304547b0e2051c644830a158 Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 20:06:59 +0200
+Subject: [PATCH 11/16] fix com.serenegiant.usbcameratest2
+
+---
+ usbCameraTest2/src/main/res/layout/activity_main.xml | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/usbCameraTest2/src/main/res/layout/activity_main.xml b/usbCameraTest2/src/main/res/layout/activity_main.xml
+index ae26b40..131bb9c 100644
+--- a/usbCameraTest2/src/main/res/layout/activity_main.xml
++++ b/usbCameraTest2/src/main/res/layout/activity_main.xml
+@@ -27,7 +27,7 @@
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
+     android:background="#ff000000"
+-    tools:context="com.serenegiant.usbcameratest.MainActivity"
++    tools:context="com.serenegiant.usbcameratest2.MainActivity"
+     tools:ignore="MergeRootFrame" >
+ 
+     <com.serenegiant.widget.SimpleUVCCameraTextureView
+@@ -36,7 +36,7 @@
+         android:layout_height="match_parent"
+         android:layout_centerInParent="true"
+         android:layout_gravity="center"
+-        android:background="#ff000000" />
++			  android:background="@null" />
+ 
+     <ImageView
+         android:id="@+id/imageView1"
+@@ -47,7 +47,7 @@
+         android:layout_alignLeft="@+id/UVCCameraTextureView1"
+         android:layout_alignRight="@+id/UVCCameraTextureView1"
+         android:src="@drawable/border" />
+-    
++
+     <ImageButton
+         android:id="@+id/capture_button"
+         android:layout_width="wrap_content"
+-- 
+2.47.1
+

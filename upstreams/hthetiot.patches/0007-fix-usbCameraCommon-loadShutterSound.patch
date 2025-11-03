@@ -1,0 +1,324 @@
+From 606f767f90e0a11d66008153bdb0276751aab8ee Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 18:08:41 +0200
+Subject: [PATCH 07/16] fix usbCameraCommon loadShutterSound
+
+---
+ .../encoder/MediaAudioEncoder.java            | 130 +++++++++---------
+ .../AbstractUVCCameraHandler.java             |  66 +++++----
+ 2 files changed, 104 insertions(+), 92 deletions(-)
+
+diff --git a/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java b/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java
+index c52022e..ba6d07f 100644
+--- a/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java
++++ b/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java
+@@ -38,16 +38,16 @@ import android.media.MediaRecorder;
+ import android.util.Log;
+ 
+ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
+-	private static final boolean DEBUG = true;	// TODO set false on release
++	private static final boolean DEBUG = true;  // TODO set false on release
+ 	private static final String TAG = "MediaAudioEncoder";
+ 
+ 	private static final String MIME_TYPE = "audio/mp4a-latm";
+-    private static final int SAMPLE_RATE = 44100;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
+-    private static final int BIT_RATE = 64000;
+-	public static final int SAMPLES_PER_FRAME = 1024;	// AAC, bytes/frame/channel
+-	public static final int FRAMES_PER_BUFFER = 25; 	// AAC, frame/buffer/sec
++	private static final int SAMPLE_RATE = 44100;   // 44.1[KHz] is only setting guaranteed to be available on all devices.
++	private static final int BIT_RATE = 64000;
++	public static final int SAMPLES_PER_FRAME = 1024;   // AAC, bytes/frame/channel
++	public static final int FRAMES_PER_BUFFER = 25;     // AAC, frame/buffer/sec
+ 
+-    private AudioThread mAudioThread = null;
++	private AudioThread mAudioThread = null;
+ 
+ 	public MediaAudioEncoder(final MediaMuxerWrapper muxer, final MediaEncoderListener listener) {
+ 		super(muxer, listener);
+@@ -56,52 +56,52 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
+ 	@Override
+ 	protected void prepare() throws IOException {
+ 		if (DEBUG) Log.v(TAG, "prepare:");
+-        mTrackIndex = -1;
+-        mMuxerStarted = mIsEOS = false;
+-        // prepare MediaCodec for AAC encoding of audio data from inernal mic.
+-        final MediaCodecInfo audioCodecInfo = selectAudioCodec(MIME_TYPE);
+-        if (audioCodecInfo == null) {
+-            Log.e(TAG, "Unable to find an appropriate codec for " + MIME_TYPE);
+-            return;
+-        }
++		mTrackIndex = -1;
++		mMuxerStarted = mIsEOS = false;
++		// prepare MediaCodec for AAC encoding of audio data from inernal mic.
++		final MediaCodecInfo audioCodecInfo = selectAudioCodec(MIME_TYPE);
++		if (audioCodecInfo == null) {
++			Log.e(TAG, "Unable to find an appropriate codec for " + MIME_TYPE);
++			return;
++		}
+ 		if (DEBUG) Log.i(TAG, "selected codec: " + audioCodecInfo.getName());
+ 
+-        final MediaFormat audioFormat = MediaFormat.createAudioFormat(MIME_TYPE, SAMPLE_RATE, 1);
++		final MediaFormat audioFormat = MediaFormat.createAudioFormat(MIME_TYPE, SAMPLE_RATE, 1);
+ 		audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+ 		audioFormat.setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_MONO);
+ 		audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE);
+ 		audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
+-//		audioFormat.setLong(MediaFormat.KEY_MAX_INPUT_SIZE, inputFile.length());
++//      audioFormat.setLong(MediaFormat.KEY_MAX_INPUT_SIZE, inputFile.length());
+ //      audioFormat.setLong(MediaFormat.KEY_DURATION, (long)durationInMs );
+ 		if (DEBUG) Log.i(TAG, "format: " + audioFormat);
+-        mMediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
+-        mMediaCodec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+-        mMediaCodec.start();
+-        if (DEBUG) Log.i(TAG, "prepare finishing");
+-        if (mListener != null) {
+-        	try {
+-        		mListener.onPrepared(this);
+-        	} catch (final Exception e) {
+-        		Log.e(TAG, "prepare:", e);
+-        	}
+-        }
++		mMediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
++		mMediaCodec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
++		mMediaCodec.start();
++		if (DEBUG) Log.i(TAG, "prepare finishing");
++		if (mListener != null) {
++			try {
++				mListener.onPrepared(this);
++			} catch (final Exception e) {
++				Log.e(TAG, "prepare:", e);
++			}
++		}
+ 	}
+ 
+-    @Override
++	@Override
+ 	protected void startRecording() {
+ 		super.startRecording();
+ 		// create and execute audio capturing thread using internal mic
+ 		if (mAudioThread == null) {
+-	        mAudioThread = new AudioThread();
++			mAudioThread = new AudioThread();
+ 			mAudioThread.start();
+ 		}
+ 	}
+ 
+ 	@Override
+-    protected void release() {
++	protected void release() {
+ 		mAudioThread = null;
+ 		super.release();
+-    }
++	}
+ 
+ 	private static final int[] AUDIO_SOURCES = new int[] {
+ 		MediaRecorder.AudioSource.DEFAULT,
+@@ -114,7 +114,7 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
+ 	 * and write them to the MediaCodec encoder
+ 	 */
+ 	private class AudioThread extends Thread {
+-    	@Override
++		@Override
+ 		@SuppressLint("MissingPermission")
+ 		public void run() {
+ 			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO); // THREAD_PRIORITY_URGENT_AUDIO
+@@ -134,7 +134,7 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
+ 						if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+ 							audioRecord.release();
+ 							audioRecord = null;
+-         				}
++						}
+ 					}
+ 				} catch (final Exception e) {
+ 					audioRecord = null;
+@@ -199,37 +199,37 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
+ 				}
+ 			}
+ 			if (DEBUG) Log.v(TAG, "AudioThread:finished");
+-    	}
+-    }
+-
+-    /**
+-     * select the first codec that match a specific MIME type
+-     * @param mimeType
+-     * @return
+-     */
+-    private static final MediaCodecInfo selectAudioCodec(final String mimeType) {
+-    	if (DEBUG) Log.v(TAG, "selectAudioCodec:");
+-
+-    	MediaCodecInfo result = null;
+-    	// get the list of available codecs
+-        final int numCodecs = MediaCodecList.getCodecCount();
+-LOOP:	for (int i = 0; i < numCodecs; i++) {
+-        	final MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
+-            if (!codecInfo.isEncoder()) {	// skipp decoder
+-                continue;
+-            }
+-            final String[] types = codecInfo.getSupportedTypes();
+-            for (int j = 0; j < types.length; j++) {
+-            	if (DEBUG) Log.i(TAG, "supportedType:" + codecInfo.getName() + ",MIME=" + types[j]);
+-                if (types[j].equalsIgnoreCase(mimeType)) {
+-                	if (result == null) {
+-                		result = codecInfo;
+-               			break LOOP;
+-                	}
+-                }
+-            }
+-        }
+-   		return result;
+-    }
++		}
++	}
++
++	/**
++	 * select the first codec that match a specific MIME type
++	 * @param mimeType
++	 * @return
++	 */
++	private static final MediaCodecInfo selectAudioCodec(final String mimeType) {
++		if (DEBUG) Log.v(TAG, "selectAudioCodec:");
++
++		MediaCodecInfo result = null;
++		// get the list of available codecs
++		final int numCodecs = MediaCodecList.getCodecCount();
++LOOP:   for (int i = 0; i < numCodecs; i++) {
++			final MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
++			if (!codecInfo.isEncoder()) {   // skipp decoder
++				continue;
++			}
++			final String[] types = codecInfo.getSupportedTypes();
++			for (int j = 0; j < types.length; j++) {
++				if (DEBUG) Log.i(TAG, "supportedType:" + codecInfo.getName() + ",MIME=" + types[j]);
++				if (types[j].equalsIgnoreCase(mimeType)) {
++					if (result == null) {
++						result = codecInfo;
++						break LOOP;
++					}
++				}
++			}
++		}
++		return result;
++	}
+ 
+ }
+diff --git a/usbCameraCommon/src/main/java/com/serenegiant/usbcameracommon/AbstractUVCCameraHandler.java b/usbCameraCommon/src/main/java/com/serenegiant/usbcameracommon/AbstractUVCCameraHandler.java
+index b368a1c..22ba3da 100644
+--- a/usbCameraCommon/src/main/java/com/serenegiant/usbcameracommon/AbstractUVCCameraHandler.java
++++ b/usbCameraCommon/src/main/java/com/serenegiant/usbcameracommon/AbstractUVCCameraHandler.java
+@@ -23,6 +23,7 @@
+ 
+ package com.serenegiant.usbcameracommon;
+ 
++import android.annotation.SuppressLint;
+ import android.app.Activity;
+ import android.content.Context;
+ import android.graphics.Bitmap;
+@@ -31,6 +32,7 @@ import android.hardware.usb.UsbDevice;
+ import android.media.AudioManager;
+ import android.media.MediaScannerConnection;
+ import android.media.SoundPool;
++import android.os.Build;
+ import android.os.Environment;
+ import android.os.Handler;
+ import android.os.Looper;
+@@ -65,7 +67,7 @@ import java.util.Set;
+ import java.util.concurrent.CopyOnWriteArraySet;
+ 
+ abstract class AbstractUVCCameraHandler extends Handler {
+-	private static final boolean DEBUG = true;	// TODO set false on release
++	private static final boolean DEBUG = true;  // TODO set false on release
+ 	private static final String TAG = "AbsUVCCameraHandler";
+ 
+ 	public interface CameraCallback {
+@@ -515,7 +517,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
+ 			if (DEBUG) Log.v(TAG_THREAD, "handleCaptureStill:");
+ 			final Activity parent = mWeakParent.get();
+ 			if (parent == null) return;
+-			mSoundPool.play(mSoundId, 0.2f, 0.2f, 0, 0, 1.0f);	// play shutter sound
++			mSoundPool.play(mSoundId, 0.2f, 0.2f, 0, 0, 1.0f);  // play shutter sound
+ 			try {
+ 				final Bitmap bitmap = mWeakCameraView.get().captureStillImage();
+ 				// get buffered output stream for saving a captured still image as a file on external storage.
+@@ -544,16 +546,16 @@ abstract class AbstractUVCCameraHandler extends Handler {
+ 			if (DEBUG) Log.v(TAG_THREAD, "handleStartRecording:");
+ 			try {
+ 				if ((mUVCCamera == null) || (mMuxer != null)) return;
+-				final MediaMuxerWrapper muxer = new MediaMuxerWrapper(".mp4");	// if you record audio only, ".m4a" is also OK.
++				final MediaMuxerWrapper muxer = new MediaMuxerWrapper(".mp4");  // if you record audio only, ".m4a" is also OK.
+ 				MediaVideoBufferEncoder videoEncoder = null;
+ 				switch (mEncoderType) {
+-				case 1:	// for video capturing using MediaVideoEncoder
++				case 1: // for video capturing using MediaVideoEncoder
+ 					new MediaVideoEncoder(muxer, getWidth(), getHeight(), mMediaEncoderListener);
+ 					break;
+-				case 2:	// for video capturing using MediaVideoBufferEncoder
++				case 2: // for video capturing using MediaVideoBufferEncoder
+ 					videoEncoder = new MediaVideoBufferEncoder(muxer, getWidth(), getHeight(), mMediaEncoderListener);
+ 					break;
+-				// case 0:	// for video capturing using MediaSurfaceEncoder
++				// case 0:  // for video capturing using MediaSurfaceEncoder
+ 				default:
+ 					new MediaSurfaceEncoder(muxer, getWidth(), getHeight(), mMediaEncoderListener);
+ 					break;
+@@ -700,27 +702,37 @@ abstract class AbstractUVCCameraHandler extends Handler {
+ 		/**
+ 		 * prepare and load shutter sound for still image capturing
+ 		 */
+-		@SuppressWarnings("deprecation")
+-		private void loadShutterSound(final Context context) {
+-	    	// get system stream type using reflection
+-	        int streamType;
+-	        try {
+-	            final Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
+-	            final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
+-	            streamType = sseField.getInt(null);
+-	        } catch (final Exception e) {
+-	        	streamType = AudioManager.STREAM_SYSTEM;	// set appropriate according to your app policy
+-	        }
+-	        if (mSoundPool != null) {
+-	        	try {
+-	        		mSoundPool.release();
+-	        	} catch (final Exception e) {
+-	        	}
+-	        	mSoundPool = null;
+-	        }
+-	        // load shutter sound from resource
+-		    mSoundPool = new SoundPool(2, streamType, 0);
+-		    mSoundId = mSoundPool.load(context, R.raw.camera_click, 1);
++		@SuppressLint("SoonBlockedPrivateApi")
++		protected void loadShutterSound(final Context context) {
++			// Define a default stream type
++			int streamType = AudioManager.STREAM_SYSTEM;
++
++			// Conditionally handle reflection based on the Android version
++			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {  // API 32 is Android 12L
++				try {
++					// Use reflection only for older versions
++					final Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
++					final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
++					streamType = sseField.getInt(null);
++				} catch (final Exception e) {
++					// If reflection fails, fall back to STREAM_SYSTEM
++					streamType = AudioManager.STREAM_SYSTEM;
++				}
++			}
++
++			// Clean up existing SoundPool instance if necessary
++			if (mSoundPool != null) {
++				try {
++					mSoundPool.release();
++				} catch (final Exception e) {
++					// Handle the exception (optional)
++				}
++				mSoundPool = null;
++			}
++
++			// Initialize the SoundPool and load the shutter sound
++			mSoundPool = new SoundPool(2, streamType, 0);
++			mSoundId = mSoundPool.load(context, R.raw.camera_click, 1);
+ 		}
+ 
+ 		@Override
+-- 
+2.47.1
+

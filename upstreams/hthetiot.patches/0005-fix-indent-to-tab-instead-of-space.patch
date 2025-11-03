@@ -1,0 +1,111 @@
+From 3f2c220f8d8b64656a2c2107105229232679d4be Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 18:17:21 +0200
+Subject: [PATCH 05/16] fix indent to tab instead of space
+
+---
+ .../com/serenegiant/service/CameraServer.java | 70 +++++++++----------
+ 1 file changed, 35 insertions(+), 35 deletions(-)
+
+diff --git a/usbCameraTest4/src/main/java/com/serenegiant/service/CameraServer.java b/usbCameraTest4/src/main/java/com/serenegiant/service/CameraServer.java
+index 9210988..f57bad9 100644
+--- a/usbCameraTest4/src/main/java/com/serenegiant/service/CameraServer.java
++++ b/usbCameraTest4/src/main/java/com/serenegiant/service/CameraServer.java
+@@ -63,13 +63,13 @@ public final class CameraServer extends Handler {
+ 	
+ 	private int mFrameWidth = DEFAULT_WIDTH, mFrameHeight = DEFAULT_HEIGHT;
+ 	
+-    private static class CallbackCookie {
++	private static class CallbackCookie {
+ 		boolean isConnected;
+ 	}
+ 
+-    private final RemoteCallbackList<IUVCServiceCallback> mCallbacks
++	private final RemoteCallbackList<IUVCServiceCallback> mCallbacks
+ 		= new RemoteCallbackList<IUVCServiceCallback>();
+-    private int mRegisteredCallbackCount;
++	private int mRegisteredCallbackCount;
+ 
+ 	private RendererHolder mRendererHolder;
+ 	private final WeakReference<CameraThread> mWeakThread;
+@@ -319,7 +319,7 @@ public final class CameraServer extends Handler {
+ 		private static final String TAG_THREAD = "CameraThread";
+ 		private final Object mSync = new Object();
+ 		private boolean mIsRecording;
+-	    private final WeakReference<Context> mWeakContext;
++		private final WeakReference<Context> mWeakContext;
+ 		private int mEncoderSurfaceId;
+ 		private int mFrameWidth, mFrameHeight;
+ 		/**
+@@ -602,37 +602,37 @@ public final class CameraServer extends Handler {
+ 		 * prepare and load shutter sound for still image capturing
+ 		 */
+ 		@SuppressLint("SoonBlockedPrivateApi")
+-        protected void loadShutterSound(final Context context) {
+-            // Define a default stream type
+-            int streamType = AudioManager.STREAM_SYSTEM;
+-
+-            // Conditionally handle reflection based on the Android version
+-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {  // API 32 is Android 12L
+-                try {
+-                    // Use reflection only for older versions
+-                    final Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
+-                    final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
+-                    streamType = sseField.getInt(null);
+-                } catch (final Exception e) {
+-                    // If reflection fails, fall back to STREAM_SYSTEM
+-                    streamType = AudioManager.STREAM_SYSTEM;
+-                }
+-            }
+-
+-            // Clean up existing SoundPool instance if necessary
+-            if (mSoundPool != null) {
+-                try {
+-                    mSoundPool.release();
+-                } catch (final Exception e) {
+-                    // Handle the exception (optional)
+-                }
+-                mSoundPool = null;
+-            }
+-
+-            // Initialize the SoundPool and load the shutter sound
+-            mSoundPool = new SoundPool(2, streamType, 0);
+-            mSoundId = mSoundPool.load(context, R.raw.camera_click, 1);
+-        }
++		protected void loadShutterSound(final Context context) {
++			// Define a default stream type
++			int streamType = AudioManager.STREAM_SYSTEM;
++
++			// Conditionally handle reflection based on the Android version
++			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {  // API 32 is Android 12L
++				try {
++					// Use reflection only for older versions
++					final Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
++					final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
++					streamType = sseField.getInt(null);
++				} catch (final Exception e) {
++					// If reflection fails, fall back to STREAM_SYSTEM
++					streamType = AudioManager.STREAM_SYSTEM;
++				}
++			}
++
++			// Clean up existing SoundPool instance if necessary
++			if (mSoundPool != null) {
++				try {
++					mSoundPool.release();
++				} catch (final Exception e) {
++					// Handle the exception (optional)
++				}
++				mSoundPool = null;
++			}
++
++			// Initialize the SoundPool and load the shutter sound
++			mSoundPool = new SoundPool(2, streamType, 0);
++			mSoundId = mSoundPool.load(context, R.raw.camera_click, 1);
++		}
+ 
+ 		@Override
+ 		public void run() {
+-- 
+2.47.1
+

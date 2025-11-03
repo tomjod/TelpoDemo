@@ -1,0 +1,26 @@
+From e5b2a6b03adef1c6ce4a65b24d531e7ff9dd4c15 Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 17:06:18 +0200
+Subject: [PATCH 01/16] fix ndk error for armeabi, mips and x86
+
+---
+ libuvccamera/src/main/jni/Application.mk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libuvccamera/src/main/jni/Application.mk b/libuvccamera/src/main/jni/Application.mk
+index afa5163..01b07c4 100644
+--- a/libuvccamera/src/main/jni/Application.mk
++++ b/libuvccamera/src/main/jni/Application.mk
+@@ -26,7 +26,7 @@
+ # Note: Supporting GCC on NDK is already deprecated and GCC will be removed from NDK soon.
+ #NDK_TOOLCHAIN_VERSION := 4.9
+ 
+-APP_PLATFORM := android-16
+-APP_ABI := armeabi armeabi-v7a arm64-v8a x86 mips
++APP_PLATFORM := android-21
++APP_ABI := armeabi-v7a arm64-v8a
+ #APP_OPTIM := debug
+ APP_OPTIM := release
+-- 
+2.47.1
+

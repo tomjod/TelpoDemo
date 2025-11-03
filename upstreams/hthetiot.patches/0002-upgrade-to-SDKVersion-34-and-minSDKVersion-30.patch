@@ -1,0 +1,342 @@
+From 1a6f5ce6a9870f4ef54e9980958a9f2a1a107b6e Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 18:06:17 +0200
+Subject: [PATCH 02/16] upgrade to SDKVersion 34 and minSDKVersion 30
+
+---
+ libuvccamera/src/main/AndroidManifest.xml     |  4 --
+ .../com/serenegiant/common/BaseActivity.java  | 13 ++---
+ usbCameraCommon/build.gradle                  |  3 +-
+ usbCameraCommon/src/main/AndroidManifest.xml  |  3 +-
+ usbCameraTest/src/main/AndroidManifest.xml    |  3 +-
+ usbCameraTest0/build.gradle                   |  3 +-
+ usbCameraTest0/src/main/AndroidManifest.xml   |  3 +-
+ usbCameraTest2/src/main/AndroidManifest.xml   |  3 +-
+ usbCameraTest3/src/main/AndroidManifest.xml   |  3 +-
+ usbCameraTest4/src/main/AndroidManifest.xml   |  6 ++-
+ usbCameraTest5/src/main/AndroidManifest.xml   |  3 +-
+ usbCameraTest6/src/main/AndroidManifest.xml   |  3 +-
+ usbCameraTest7/src/main/AndroidManifest.xml   |  3 +-
+ usbCameraTest8/src/main/AndroidManifest.xml   | 49 ++++++++++---------
+ 14 files changed, 55 insertions(+), 47 deletions(-)
+
+diff --git a/libuvccamera/src/main/AndroidManifest.xml b/libuvccamera/src/main/AndroidManifest.xml
+index 8a2f33f..730106e 100644
+--- a/libuvccamera/src/main/AndroidManifest.xml
++++ b/libuvccamera/src/main/AndroidManifest.xml
+@@ -26,8 +26,4 @@
+     android:versionCode="2"
+     android:versionName="1.1" >
+ 
+-    <uses-sdk
+-        android:minSdkVersion="14"
+-        android:targetSdkVersion="22" />
+-
+ </manifest>
+diff --git a/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java b/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java
+index 89262ca..33257fa 100644
+--- a/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java
++++ b/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java
+@@ -31,10 +31,11 @@ import android.os.Handler;
+ import android.os.Looper;
+ import android.support.annotation.NonNull;
+ import android.support.annotation.StringRes;
+-import android.support.v7.app.AppCompatActivity;
++import android.app.Activity;
+ import android.util.Log;
+ import android.widget.Toast;
+ 
++import com.serenegiant.dialog.MessageDialogFragment;
+ import com.serenegiant.dialog.MessageDialogFragmentV4;
+ import com.serenegiant.utils.BuildCheck;
+ import com.serenegiant.utils.HandlerThreadHandler;
+@@ -44,7 +45,7 @@ import com.serenegiant.utils.PermissionCheck;
+  * Created by saki on 2016/11/18.
+  *
+  */
+-public class BaseActivity extends AppCompatActivity
++public class BaseActivity extends Activity
+ 	implements MessageDialogFragmentV4.MessageDialogListener {
+ 
+ 	private static boolean DEBUG = false;	// FIXME 実働時はfalseにセットすること
+@@ -278,7 +279,7 @@ public class BaseActivity extends AppCompatActivity
+ 	 */
+ 	protected boolean checkPermissionWriteExternalStorage() {
+ 		if (!PermissionCheck.hasWriteExternalStorage(this)) {
+-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
++			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
+ 				R.string.permission_title, R.string.permission_ext_storage_request,
+ 				new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
+ 			return false;
+@@ -293,7 +294,7 @@ public class BaseActivity extends AppCompatActivity
+ 	 */
+ 	protected boolean checkPermissionAudio() {
+ 		if (!PermissionCheck.hasAudio(this)) {
+-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
++			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
+ 				R.string.permission_title, R.string.permission_audio_recording_request,
+ 				new String[]{Manifest.permission.RECORD_AUDIO});
+ 			return false;
+@@ -308,7 +309,7 @@ public class BaseActivity extends AppCompatActivity
+ 	 */
+ 	protected boolean checkPermissionNetwork() {
+ 		if (!PermissionCheck.hasNetwork(this)) {
+-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_NETWORK,
++			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_NETWORK,
+ 				R.string.permission_title, R.string.permission_network_request,
+ 				new String[]{Manifest.permission.INTERNET});
+ 			return false;
+@@ -323,7 +324,7 @@ public class BaseActivity extends AppCompatActivity
+ 	 */
+ 	protected boolean checkPermissionCamera() {
+ 		if (!PermissionCheck.hasCamera(this)) {
+-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_CAMERA,
++			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_CAMERA,
+ 				R.string.permission_title, R.string.permission_camera_request,
+ 				new String[]{Manifest.permission.CAMERA});
+ 			return false;
+diff --git a/usbCameraCommon/build.gradle b/usbCameraCommon/build.gradle
+index 92ed5a9..27dfc48 100644
+--- a/usbCameraCommon/build.gradle
++++ b/usbCameraCommon/build.gradle
+@@ -33,7 +33,7 @@ android {
+    	}
+ 
+     defaultConfig {
+-        minSdkVersion 18
++        minSdkVersion minTargetVersion
+         targetSdkVersion versionTarget
+ 
+     }
+@@ -48,7 +48,6 @@ android {
+ dependencies {
+ 	api fileTree(dir: 'libs', include: ['*.jar'])
+ 
+-	implementation "com.android.support:support-v4:${supportLibVersion}"
+ 	implementation "com.android.support:support-annotations:${supportLibVersion}"
+ 
+ 	implementation("com.serenegiant:common:${commonLibVersion}") {
+diff --git a/usbCameraCommon/src/main/AndroidManifest.xml b/usbCameraCommon/src/main/AndroidManifest.xml
+index 67c59ea..95180b6 100644
+--- a/usbCameraCommon/src/main/AndroidManifest.xml
++++ b/usbCameraCommon/src/main/AndroidManifest.xml
+@@ -21,4 +21,5 @@
+   ~  may have a different license, see the respective files.
+   -->
+ 
+-<manifest package="com.serenegiant.usbcameracommon"/>
++<manifest package="com.serenegiant.usbcameracommon">
++</manifest>
+diff --git a/usbCameraTest/src/main/AndroidManifest.xml b/usbCameraTest/src/main/AndroidManifest.xml
+index a2abf49..dcc18c3 100644
+--- a/usbCameraTest/src/main/AndroidManifest.xml
++++ b/usbCameraTest/src/main/AndroidManifest.xml
+@@ -31,7 +31,8 @@
+         android:theme="@style/AppTheme" >
+         <activity
+             android:name="com.serenegiant.usbcameratest.MainActivity"
+-            android:label="@string/app_name" >
++            android:label="@string/app_name"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest0/build.gradle b/usbCameraTest0/build.gradle
+index cc233b0..6f2585c 100644
+--- a/usbCameraTest0/build.gradle
++++ b/usbCameraTest0/build.gradle
+@@ -34,7 +34,7 @@ android {
+ 
+     defaultConfig {
+         applicationId "com.serenegiant.usbcameratest0"
+-        minSdkVersion 14
++        minSdkVersion minTargetVersion
+ 		targetSdkVersion versionTarget
+ 		versionCode 8
+ 		versionName "3.00"
+@@ -51,7 +51,6 @@ android {
+ dependencies {
+ 	api fileTree(dir: 'libs', include: ['*.jar'])
+ 
+-	implementation "com.android.support:support-v4:${supportLibVersion}"
+ 	implementation "com.android.support:support-annotations:${supportLibVersion}"
+ 
+ 	implementation("com.serenegiant:common:${commonLibVersion}") {
+diff --git a/usbCameraTest0/src/main/AndroidManifest.xml b/usbCameraTest0/src/main/AndroidManifest.xml
+index 015e549..ab263c4 100644
+--- a/usbCameraTest0/src/main/AndroidManifest.xml
++++ b/usbCameraTest0/src/main/AndroidManifest.xml
+@@ -31,7 +31,8 @@
+         android:theme="@style/AppTheme" >
+         <activity
+             android:name="com.serenegiant.usbcameratest0.MainActivity"
+-            android:label="@string/app_name" >
++            android:label="@string/app_name"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest2/src/main/AndroidManifest.xml b/usbCameraTest2/src/main/AndroidManifest.xml
+index 34e65a8..13d8b9b 100644
+--- a/usbCameraTest2/src/main/AndroidManifest.xml
++++ b/usbCameraTest2/src/main/AndroidManifest.xml
+@@ -33,7 +33,8 @@
+         android:theme="@style/AppTheme" >
+         <activity
+             android:name="com.serenegiant.usbcameratest2.MainActivity"
+-            android:label="@string/app_name" >
++            android:label="@string/app_name"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest3/src/main/AndroidManifest.xml b/usbCameraTest3/src/main/AndroidManifest.xml
+index 7b60fda..c93c694 100644
+--- a/usbCameraTest3/src/main/AndroidManifest.xml
++++ b/usbCameraTest3/src/main/AndroidManifest.xml
+@@ -37,7 +37,8 @@
+         <activity
+             android:name="com.serenegiant.usbcameratest3.MainActivity"
+             android:screenOrientation="sensorLandscape"
+-            android:label="@string/app_name" >
++            android:label="@string/app_name"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest4/src/main/AndroidManifest.xml b/usbCameraTest4/src/main/AndroidManifest.xml
+index 9fc8b5a..76ba387 100644
+--- a/usbCameraTest4/src/main/AndroidManifest.xml
++++ b/usbCameraTest4/src/main/AndroidManifest.xml
+@@ -39,7 +39,8 @@
+         <activity
+             android:name=".MainActivity"
+             android:label="@string/app_name"
+-            android:launchMode="singleTask" >
++            android:launchMode="singleTask"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 
+@@ -57,7 +58,8 @@
+             </activity>
+         <service
+             android:name="com.serenegiant.service.UVCService"
+-			android:process=":uvcservice" >
++			android:process=":uvcservice" 
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="com.serenegiant.service.IUVCService" />
+                 <action android:name="com.serenegiant.service.IUVCSlaveService" />
+diff --git a/usbCameraTest5/src/main/AndroidManifest.xml b/usbCameraTest5/src/main/AndroidManifest.xml
+index 9d8ca8d..6008708 100644
+--- a/usbCameraTest5/src/main/AndroidManifest.xml
++++ b/usbCameraTest5/src/main/AndroidManifest.xml
+@@ -36,7 +36,8 @@
+         android:theme="@style/AppTheme" >
+         <activity
+             android:name="com.serenegiant.usbcameratest5.MainActivity"
+-            android:label="@string/app_name" >
++            android:label="@string/app_name"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest6/src/main/AndroidManifest.xml b/usbCameraTest6/src/main/AndroidManifest.xml
+index 7bdc7d8..d6ee4b1 100644
+--- a/usbCameraTest6/src/main/AndroidManifest.xml
++++ b/usbCameraTest6/src/main/AndroidManifest.xml
+@@ -37,7 +37,8 @@
+         <activity
+             android:name="com.serenegiant.usbcameratest6.MainActivity"
+             android:label="@string/app_name"
+-            android:screenOrientation="sensorLandscape" >
++            android:screenOrientation="sensorLandscape"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest7/src/main/AndroidManifest.xml b/usbCameraTest7/src/main/AndroidManifest.xml
+index 4047ece..71cf560 100644
+--- a/usbCameraTest7/src/main/AndroidManifest.xml
++++ b/usbCameraTest7/src/main/AndroidManifest.xml
+@@ -37,7 +37,8 @@
+         <activity
+             android:name="com.serenegiant.usbcameratest7.MainActivity"
+             android:label="@string/app_name"
+-            android:screenOrientation="sensorLandscape" >
++            android:screenOrientation="sensorLandscape"
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+diff --git a/usbCameraTest8/src/main/AndroidManifest.xml b/usbCameraTest8/src/main/AndroidManifest.xml
+index 99bca5a..62aef22 100644
+--- a/usbCameraTest8/src/main/AndroidManifest.xml
++++ b/usbCameraTest8/src/main/AndroidManifest.xml
+@@ -1,28 +1,29 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <!--
+-  ~  UVCCamera
+-  ~  library and sample to access to UVC web camera on non-rooted Android device
+-  ~
+-  ~ Copyright (c) 2014-2017 saki t_saki@serenegiant.com
+-  ~
+-  ~  Licensed under the Apache License, Version 2.0 (the "License");
+-  ~  you may not use this file except in compliance with the License.
+-  ~   You may obtain a copy of the License at
+-  ~
+-  ~      http://www.apache.org/licenses/LICENSE-2.0
+-  ~
+-  ~   Unless required by applicable law or agreed to in writing, software
+-  ~   distributed under the License is distributed on an "AS IS" BASIS,
+-  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-  ~   See the License for the specific language governing permissions and
+-  ~   limitations under the License.
+-  ~
+-  ~  All files in the folder are under this Apache License, Version 2.0.
+-  ~  Files in the libjpeg-turbo, libusb, libuvc, rapidjson folder
+-  ~  may have a different license, see the respective files.
+-  -->
++	~  UVCCamera
++	~  library and sample to access to UVC web camera on non-rooted Android device
++	~
++	~ Copyright (c) 2014-2017 saki t_saki@serenegiant.com
++	~
++	~  Licensed under the Apache License, Version 2.0 (the "License");
++	~  you may not use this file except in compliance with the License.
++	~   You may obtain a copy of the License at
++	~
++	~      http://www.apache.org/licenses/LICENSE-2.0
++	~
++	~   Unless required by applicable law or agreed to in writing, software
++	~   distributed under the License is distributed on an "AS IS" BASIS,
++	~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++	~   See the License for the specific language governing permissions and
++	~   limitations under the License.
++	~
++	~  All files in the folder are under this Apache License, Version 2.0.
++	~  Files in the libjpeg-turbo, libusb, libuvc, rapidjson folder
++	~  may have a different license, see the respective files.
++	-->
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-		  package="com.serenegiant.usbcameratest8">
++    xmlns:tools="http://schemas.android.com/tools"
++    package="com.serenegiant.usbcameratest8">
+ 
+ 	<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+ 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+@@ -38,7 +39,9 @@
+ 		<activity
+ 			android:name=".MainActivity"
+ 			android:screenOrientation="sensorLandscape"
+-			android:label="@string/app_name">
++			android:label="@string/app_name"
++			android:exported="true"
++            tools:ignore="DiscouragedApi">
+ 			<intent-filter>
+ 				<action android:name="android.intent.action.MAIN"/>
+ 
+-- 
+2.47.1
+

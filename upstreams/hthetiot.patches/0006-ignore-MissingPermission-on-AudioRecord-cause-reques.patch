@@ -1,0 +1,38 @@
+From e0625c7b86a518de24f36067718315d79ab18e8a Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 18:07:25 +0200
+Subject: [PATCH 06/16] ignore MissingPermission on AudioRecord cause requested
+ by app
+
+---
+ .../java/com/serenegiant/encoder/MediaAudioEncoder.java     | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java b/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java
+index a6a9010..c52022e 100644
+--- a/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java
++++ b/usbCameraCommon/src/main/java/com/serenegiant/encoder/MediaAudioEncoder.java
+@@ -27,6 +27,7 @@ import java.io.IOException;
+ import java.nio.ByteBuffer;
+ import java.nio.ByteOrder;
+ 
++import android.annotation.SuppressLint;
+ import android.media.AudioFormat;
+ import android.media.AudioRecord;
+ import android.media.MediaCodec;
+@@ -112,9 +113,10 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
+ 	 * Thread to capture audio data from internal mic as uncompressed 16bit PCM data
+ 	 * and write them to the MediaCodec encoder
+ 	 */
+-    private class AudioThread extends Thread {
++	private class AudioThread extends Thread {
+     	@Override
+-    	public void run() {
++		@SuppressLint("MissingPermission")
++		public void run() {
+ 			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO); // THREAD_PRIORITY_URGENT_AUDIO
+ 			int cnt = 0;
+ 			final int min_buffer_size = AudioRecord.getMinBufferSize(
+-- 
+2.47.1
+

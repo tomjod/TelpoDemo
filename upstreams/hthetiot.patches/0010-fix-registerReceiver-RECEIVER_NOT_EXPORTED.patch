@@ -1,0 +1,48 @@
+From fdbca8c9431b924d565c2fb1833662c2b5e90a35 Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 20:05:15 +0200
+Subject: [PATCH 10/16] fix registerReceiver RECEIVER_NOT_EXPORTED
+
+---
+ .../main/java/com/serenegiant/usb/USBMonitor.java | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java b/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java
+index 722dd36..bb8eb43 100644
+--- a/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java
++++ b/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java
+@@ -43,6 +43,7 @@ import android.hardware.usb.UsbDevice;
+ import android.hardware.usb.UsbDeviceConnection;
+ import android.hardware.usb.UsbInterface;
+ import android.hardware.usb.UsbManager;
++import android.os.Build;
+ import android.os.Handler;
+ import android.text.TextUtils;
+ import android.util.Log;
+@@ -167,11 +168,21 @@ public final class USBMonitor {
+ 			if (DEBUG) Log.i(TAG, "register:");
+ 			final Context context = mWeakContext.get();
+ 			if (context != null) {
+-				mPermissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
++				mPermissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
+ 				final IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+ 				// ACTION_USB_DEVICE_ATTACHED never comes on some devices so it should not be added here
+ 				filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+-				context.registerReceiver(mUsbReceiver, filter);
++
++				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
++					// For Android 13 (API level 33) and above, use receiver flags
++					context.registerReceiver(mUsbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
++				} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
++					// For Android 12 (API level 31) and above
++					context.registerReceiver(mUsbReceiver, filter);
++				} else {
++					// For older versions of Android
++					context.registerReceiver(mUsbReceiver, filter);
++				}
+ 			}
+ 			// start connection check
+ 			mDeviceCounts = 0;
+-- 
+2.47.1
+

@@ -1,0 +1,115 @@
+From a2990a0a892fb85b0125f470899b319605ac42aa Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 18:09:15 +0200
+Subject: [PATCH 08/16] fix missing res/values/dimens.xml entry
+
+---
+ usbCameraTest/src/main/res/values/dimens.xml  | 1 +
+ usbCameraTest0/src/main/res/values/dimens.xml | 1 +
+ usbCameraTest2/src/main/res/values/dimens.xml | 1 +
+ usbCameraTest3/src/main/res/values/dimens.xml | 1 +
+ usbCameraTest5/src/main/res/values/dimens.xml | 1 +
+ usbCameraTest6/src/main/res/values/dimens.xml | 1 +
+ usbCameraTest7/src/main/res/values/dimens.xml | 1 +
+ usbCameraTest8/src/main/res/values/dimens.xml | 1 +
+ 8 files changed, 8 insertions(+)
+
+diff --git a/usbCameraTest/src/main/res/values/dimens.xml b/usbCameraTest/src/main/res/values/dimens.xml
+index 9c8e51a..6816186 100644
+--- a/usbCameraTest/src/main/res/values/dimens.xml
++++ b/usbCameraTest/src/main/res/values/dimens.xml
+@@ -23,6 +23,7 @@
+   -->
+ <resources>
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest0/src/main/res/values/dimens.xml b/usbCameraTest0/src/main/res/values/dimens.xml
+index 9c8e51a..6816186 100644
+--- a/usbCameraTest0/src/main/res/values/dimens.xml
++++ b/usbCameraTest0/src/main/res/values/dimens.xml
+@@ -23,6 +23,7 @@
+   -->
+ <resources>
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest2/src/main/res/values/dimens.xml b/usbCameraTest2/src/main/res/values/dimens.xml
+index 790540d..522af66 100644
+--- a/usbCameraTest2/src/main/res/values/dimens.xml
++++ b/usbCameraTest2/src/main/res/values/dimens.xml
+@@ -24,6 +24,7 @@
+ <resources>
+ 
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest3/src/main/res/values/dimens.xml b/usbCameraTest3/src/main/res/values/dimens.xml
+index 790540d..522af66 100644
+--- a/usbCameraTest3/src/main/res/values/dimens.xml
++++ b/usbCameraTest3/src/main/res/values/dimens.xml
+@@ -24,6 +24,7 @@
+ <resources>
+ 
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest5/src/main/res/values/dimens.xml b/usbCameraTest5/src/main/res/values/dimens.xml
+index 790540d..522af66 100644
+--- a/usbCameraTest5/src/main/res/values/dimens.xml
++++ b/usbCameraTest5/src/main/res/values/dimens.xml
+@@ -24,6 +24,7 @@
+ <resources>
+ 
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest6/src/main/res/values/dimens.xml b/usbCameraTest6/src/main/res/values/dimens.xml
+index 790540d..522af66 100644
+--- a/usbCameraTest6/src/main/res/values/dimens.xml
++++ b/usbCameraTest6/src/main/res/values/dimens.xml
+@@ -24,6 +24,7 @@
+ <resources>
+ 
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest7/src/main/res/values/dimens.xml b/usbCameraTest7/src/main/res/values/dimens.xml
+index 790540d..522af66 100644
+--- a/usbCameraTest7/src/main/res/values/dimens.xml
++++ b/usbCameraTest7/src/main/res/values/dimens.xml
+@@ -24,6 +24,7 @@
+ <resources>
+ 
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 	<dimen name="button_size">48dp</dimen>
+diff --git a/usbCameraTest8/src/main/res/values/dimens.xml b/usbCameraTest8/src/main/res/values/dimens.xml
+index f353c0d..e0619e2 100644
+--- a/usbCameraTest8/src/main/res/values/dimens.xml
++++ b/usbCameraTest8/src/main/res/values/dimens.xml
+@@ -23,6 +23,7 @@
+ 
+ <resources>
+ 	<!-- Default screen margins, per the Android Design guidelines. -->
++  <dimen name="list_font_size">24sp</dimen>
+ 	<dimen name="activity_horizontal_margin">16dp</dimen>
+ 	<dimen name="activity_vertical_margin">16dp</dimen>
+ 
+-- 
+2.47.1
+

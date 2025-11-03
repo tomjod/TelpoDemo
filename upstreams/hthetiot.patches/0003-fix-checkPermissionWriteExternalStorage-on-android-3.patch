@@ -1,0 +1,83 @@
+From 95c89c9152c2c1065171cfda2019587310da5ce9 Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 18:17:54 +0200
+Subject: [PATCH 03/16] fix checkPermissionWriteExternalStorage on android 30+
+
+---
+ .../com/serenegiant/common/BaseActivity.java     | 16 +++++++++++-----
+ .../com/serenegiant/common/BaseFragment.java     | 16 +++++++++++-----
+ 2 files changed, 22 insertions(+), 10 deletions(-)
+
+diff --git a/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java b/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java
+index 33257fa..96783e6 100644
+--- a/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java
++++ b/libuvccamera/src/main/java/com/serenegiant/common/BaseActivity.java
+@@ -26,7 +26,9 @@ package com.serenegiant.common;
+ import android.Manifest;
+ import android.annotation.SuppressLint;
+ import android.content.pm.PackageManager;
++import android.os.Build;
+ import android.os.Bundle;
++import android.os.Environment;
+ import android.os.Handler;
+ import android.os.Looper;
+ import android.support.annotation.NonNull;
+@@ -278,11 +280,15 @@ public class BaseActivity extends Activity
+ 	 * @return true 外部ストレージへの書き込みパーミッションが有る
+ 	 */
+ 	protected boolean checkPermissionWriteExternalStorage() {
+-		if (!PermissionCheck.hasWriteExternalStorage(this)) {
+-			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
+-				R.string.permission_title, R.string.permission_ext_storage_request,
+-				new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
+-			return false;
++		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
++			return Environment.isExternalStorageManager() || Environment.isExternalStorageEmulated();
++		} else {
++			if (!PermissionCheck.hasWriteExternalStorage(this)) {
++				MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
++						R.string.permission_title, R.string.permission_ext_storage_request,
++						new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
++				return false;
++			}
+ 		}
+ 		return true;
+ 	}
+diff --git a/libuvccamera/src/main/java/com/serenegiant/common/BaseFragment.java b/libuvccamera/src/main/java/com/serenegiant/common/BaseFragment.java
+index cdb07fe..4318bda 100644
+--- a/libuvccamera/src/main/java/com/serenegiant/common/BaseFragment.java
++++ b/libuvccamera/src/main/java/com/serenegiant/common/BaseFragment.java
+@@ -27,7 +27,9 @@ import android.Manifest;
+ import android.annotation.SuppressLint;
+ import android.app.Fragment;
+ import android.content.pm.PackageManager;
++import android.os.Build;
+ import android.os.Bundle;
++import android.os.Environment;
+ import android.os.Handler;
+ import android.os.Looper;
+ import android.support.annotation.NonNull;
+@@ -285,11 +287,15 @@ public class BaseFragment extends Fragment
+ 	 * @return true 外部ストレージへの書き込みパーミッションが有る
+ 	 */
+ 	protected boolean checkPermissionWriteExternalStorage() {
+-		if (!PermissionCheck.hasWriteExternalStorage(getActivity())) {
+-			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
+-				com.serenegiant.common.R.string.permission_title, com.serenegiant.common.R.string.permission_ext_storage_request,
+-				new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
+-			return false;
++		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
++			return Environment.isExternalStorageManager() || Environment.isExternalStorageEmulated();
++		} else {
++			if (!PermissionCheck.hasWriteExternalStorage(getActivity())) {
++				MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
++						R.string.permission_title, R.string.permission_ext_storage_request,
++						new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
++				return false;
++			}
+ 		}
+ 		return true;
+ 	}
+-- 
+2.47.1
+

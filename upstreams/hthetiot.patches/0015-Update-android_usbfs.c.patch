@@ -1,0 +1,25 @@
+From 42fda90e1f868fe078be50c67c327a51858a6592 Mon Sep 17 00:00:00 2001
+From: Plena <zoelam020@gmail.com>
+Date: Wed, 23 Dec 2020 10:33:08 +0800
+Subject: [PATCH 15/16] Update android_usbfs.c
+
+---
+ libuvccamera/src/main/jni/libusb/libusb/os/android_usbfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libuvccamera/src/main/jni/libusb/libusb/os/android_usbfs.c b/libuvccamera/src/main/jni/libusb/libusb/os/android_usbfs.c
+index 932787f..6648538 100644
+--- a/libuvccamera/src/main/jni/libusb/libusb/os/android_usbfs.c
++++ b/libuvccamera/src/main/jni/libusb/libusb/os/android_usbfs.c
+@@ -2932,7 +2932,7 @@ static int reap_for_handle(struct libusb_device_handle *handle) {
+ 	
+ 	//if not check status, will crash when target > 27
+ 	//current error status is -108
+-	if(urb->status < 0){
++	if(urb->status == -108){
+ 	    return LIBUSB_ERROR_OTHER;
+ 	}
+ 	
+-- 
+2.47.1
+

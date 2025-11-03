@@ -1,0 +1,29 @@
+From c51aa1d7ba14925b88291134fb25b42b774a2e42 Mon Sep 17 00:00:00 2001
+From: Harold Thetiot <hthetiot@gmail.com>
+Date: Sat, 14 Sep 2024 20:46:59 +0200
+Subject: [PATCH 13/16] fix usbdevice.getSerialNumber on > 28
+
+---
+ .../src/main/java/com/serenegiant/usb/USBMonitor.java       | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java b/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java
+index bb8eb43..abfd37a 100644
+--- a/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java
++++ b/libuvccamera/src/main/java/com/serenegiant/usb/USBMonitor.java
+@@ -671,7 +671,11 @@ public final class USBMonitor {
+ 		if (useNewAPI && BuildCheck.isAndroid5()) {
+ 			sb.append("#");
+ 			if (TextUtils.isEmpty(serial)) {
+-				sb.append(device.getSerialNumber());	sb.append("#");	// API >= 21
++				try {
++					sb.append(device.getSerialNumber());
++					sb.append("#");
++				} // API >= 21 & targetSdkVersion has to be <= 28
++				catch(SecurityException ignore) {}
+ 			}
+ 			sb.append(device.getManufacturerName());	sb.append("#");	// API >= 21
+ 			sb.append(device.getConfigurationCount());	sb.append("#");	// API >= 21
+-- 
+2.47.1
+
