@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 /*
  *  UVCCamera
  *  library and sample to access to UVC web camera on non-rooted Android device
@@ -22,6 +24,8 @@
  */
 plugins {
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
+
 }
 
 apply plugin: 'com.android.application'
@@ -38,29 +42,50 @@ android {
 	defaultConfig {
 		applicationId "com.mundosvirtuales.telpoapp"
 		minSdkVersion 21
+		//noinspection OldTargetApi
 		targetSdkVersion 35
 		versionCode 1
 		versionName "1.0"
-
-		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        buildConfigField 'boolean', 'ENABLE_CRASHLYTICS', 'true'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
 	}
+
 	buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            buildConfigField 'boolean', 'ENABLE_CRASHLYTICS', 'false'
+        }
 		release {
-			minifyEnabled false
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable false
+            minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 		}
 	}
-    kotlinOptions {
-        jvmTarget = '11'
+
+    buildFeatures {
+        buildConfig = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.11"
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11) // Set the JVM target version for both Kotlin and Java
+        }
     }
 }
 
 dependencies {
 	implementation libs.support.annotations
 	implementation libs.support.v4
+    implementation libs.androidx.foundation
 
-	androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
 		exclude group: 'com.android.support', module: 'support-annotations'
 	})
 	testImplementation 'junit:junit:4.13.2'
@@ -71,6 +96,7 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2025.10.01"))
 
     // Compose dependencies
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4'
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")

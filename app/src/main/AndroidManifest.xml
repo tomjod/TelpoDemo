@@ -41,7 +41,7 @@
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme">
 		<activity
-			android:name=".CameraActivity"
+			android:name=".MainActivity"
 			android:screenOrientation="sensorLandscape"
 			android:exported="true"
             tools:ignore="DiscouragedApi">
