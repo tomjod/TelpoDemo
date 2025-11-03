@@ -30,7 +30,8 @@ import android.opengl.EGLSurface;
 import android.opengl.GLES10;
 import android.opengl.GLES20;
 import android.os.Build;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -64,7 +65,7 @@ import com.serenegiant.utils.BuildCheck;
 		private Context(final EGLContext context) {
 			eglContext = context;
 		}
-		
+
 		@Override
 		@SuppressLint("NewApi")
 		public long getNativeHandle() {
@@ -72,7 +73,7 @@ import com.serenegiant.utils.BuildCheck;
 				(BuildCheck.isLollipop()
 					? eglContext.getNativeHandle() : eglContext.getHandle()) : 0L;
 		}
-	
+
 		@Override
 		public Object getEGLContext() {
 			return eglContext;

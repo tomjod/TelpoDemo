@@ -19,8 +19,10 @@ package com.serenegiant.glutils;
 */
 
 import android.graphics.SurfaceTexture;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+
+import androidx.annotation.Nullable;
 import android.view.Surface;
 
 /**
@@ -97,27 +99,27 @@ public interface IRendererHolder extends IRendererCommon {
 	 * @param id
 	 */
 	public void removeSurface(final int id);
-	
+
 	/**
 	 * 分配描画用のSurfaceを全て削除
 	 * このメソッドはSurfaceが削除されるか
 	 * interruptされるまでカレントスレッドをブロックする。
 	 */
 	public void removeSurfaceAll();
-	
+
 	/**
 	 * 分配描画用のSurfaceを指定した色で塗りつぶす
 	 * @param id
 	 * @param color
 	 */
 	public void clearSurface(final int id, final int color);
-	
+
 	/**
 	 * 分配描画用のSurfaceを指定した色で塗りつぶす
 	 * @param color
 	 */
 	public void clearSurfaceAll(final int color);
-	
+
 	/**
 	 * モデルビュー変換行列をセット
 	 * @param id
@@ -133,7 +135,7 @@ public interface IRendererHolder extends IRendererCommon {
 	 * @return
 	 */
 	public boolean isEnabled(final int id);
-	
+
 	/**
 	 * 分配描画用のSurfaceへの描画の有効・無効を切替
 	 * @param id
@@ -159,7 +161,7 @@ public interface IRendererHolder extends IRendererCommon {
 	 * @param path
 	 */
 	public void captureStillAsync(final String path);
-	
+
 	/**
 	 * 静止画を撮影する
 	 * 撮影完了を待機しない

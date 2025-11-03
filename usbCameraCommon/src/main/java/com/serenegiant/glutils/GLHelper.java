@@ -28,7 +28,8 @@ import android.graphics.drawable.Drawable;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.serenegiant.utils.AssetsHelper;
@@ -93,7 +94,7 @@ public final class GLHelper {
 		GLES20.glTexParameteri(texTarget, GLES20.GL_TEXTURE_MAG_FILTER, mag_filter);
 		return tex[0];
 	}
-	
+
 	/**
 	 * テクスチャ名配列を生成(前から順にGL_TEXTURE0, GL_TEXTURE1, ...)
 	 * @param n 生成するテキスチャ名の数, 最大で32個(GL_MAX_TEXTURE_IMAGE_UNITS以下)
@@ -103,7 +104,7 @@ public final class GLHelper {
 	 */
 	public static int[] initTexes(final int n,
 		final int texTarget, final int filter_param) {
-		
+
 		return initTexes(new int[n], texTarget,
 			filter_param, filter_param, GLES20.GL_CLAMP_TO_EDGE);
 	}
@@ -117,7 +118,7 @@ public final class GLHelper {
 	 */
 	public static int[] initTexes(@NonNull final int[] texIds,
 		final int texTarget, final int filter_param) {
-		
+
 		return initTexes(texIds, texTarget,
 			filter_param, filter_param, GLES20.GL_CLAMP_TO_EDGE);
 	}
@@ -133,7 +134,7 @@ public final class GLHelper {
 	 */
 	public static int[] initTexes(final int n,
 		final int texTarget, final int min_filter, final int mag_filter, final int wrap) {
-		
+
 		return initTexes(new int[n], texTarget, min_filter, mag_filter, wrap);
 	}
 
@@ -160,7 +161,7 @@ public final class GLHelper {
 		}
 		return texIds;
 	}
-	
+
 	/**
 	 * テクスチャ名配列を生成(こっちは全部同じテクスチャユニット)
 	 * @param n 最大で32個(GL_MAX_TEXTURE_IMAGE_UNITS以下)
@@ -178,7 +179,7 @@ public final class GLHelper {
 		return initTexes(new int[n], texTarget, texUnit,
 			min_filter, mag_filter, wrap);
 	}
-	
+
 	/**
 	 * テクスチャ名配列を生成(こっちは全部同じテクスチャユニット)
 	 * @param texIds 最大で32個(GL_MAX_TEXTURE_IMAGE_UNITS以下)
@@ -189,11 +190,11 @@ public final class GLHelper {
 	 */
 	public static int[] initTexes(@NonNull final int[] texIds,
 		final int texTarget, final int texUnit, final int filter_param) {
-		
+
 		return initTexes(texIds, texTarget, texUnit,
 			filter_param, filter_param, GLES20.GL_CLAMP_TO_EDGE);
 	}
-	
+
 	/**
 	 * テクスチャ名配列を生成(こっちは全部同じテクスチャユニット)
 	 * @param texIds
@@ -239,7 +240,7 @@ public final class GLHelper {
 	public static int loadTextureFromResource(final Context context, final int resId) {
 		return loadTextureFromResource(context, resId, null);
 	}
-	
+
 	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	public static int loadTextureFromResource(final Context context, final int resId, final Resources.Theme theme) {
