@@ -1,0 +1,12 @@
+{
+    "kotlin.languageServer.enabled": true,
+    "java.import.gradle.enabled": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/*.class": true,
+        "**/.gradle": true,
+        "**/.idea": true,
+        "**/build": true
+    }
+}

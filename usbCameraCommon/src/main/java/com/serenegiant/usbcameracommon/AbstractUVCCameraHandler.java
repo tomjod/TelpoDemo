@@ -89,6 +89,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 	private static final int MSG_CAPTURE_STOP = 6;
 	private static final int MSG_MEDIA_UPDATE = 7;
 	private static final int MSG_RELEASE = 9;
+	private static final int MSG_SET_FRAME_CALLBACK = 10;
 
 	private final WeakReference<AbstractUVCCameraHandler.CameraThread> mWeakThread;
 	private volatile boolean mReleased;
@@ -237,6 +238,11 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		}
 	}
 
+	public void setFrameCallback(final IFrameCallback callback) {
+		checkReleased();
+		sendMessage(obtainMessage(MSG_SET_FRAME_CALLBACK, callback));
+	}
+
 	protected void updateMedia(final String path) {
 		sendMessage(obtainMessage(MSG_MEDIA_UPDATE, path));
 	}
@@ -325,6 +331,9 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		case MSG_RELEASE:
 			thread.handleRelease();
 			break;
+		case MSG_SET_FRAME_CALLBACK:
+			thread.handleSetFrameCallback((IFrameCallback) msg.obj);
+			break;
 		default:
 			throw new RuntimeException("unsupported message:what=" + msg.what);
 		}
@@ -357,6 +366,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		 */
 		private MediaMuxerWrapper mMuxer;
 		private MediaVideoBufferEncoder mVideoEncoder;
+		private IFrameCallback mExternalFrameCallback;
 
 		/**
 		 *
@@ -495,7 +505,13 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			synchronized (mSync) {
 				mIsPreviewing = true;
 			}
+			mUVCCamera.updateCameraParams();
+			synchronized (mSync) {
+				mIsPreviewing = true;
+			}
 			callOnStartPreview();
+			// Always set the frame callback to ensure we capture frames for ML or Recording
+			mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
 		}
 
 		public void handleStopPreview() {
@@ -566,7 +582,9 @@ abstract class AbstractUVCCameraHandler extends Handler {
 				}
 				muxer.prepare();
 				muxer.startRecording();
-				if (videoEncoder != null) {
+				muxer.startRecording();
+				// Frame callback is already set in handleStartPreview, or will be set there
+				if (mUVCCamera != null) {
 					mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
 				}
 				synchronized (mSync) {
@@ -598,7 +616,10 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			}
 			if (muxer != null) {
 				muxer.stopRecording();
-				mUVCCamera.setFrameCallback(null, 0);
+				// Do NOT clear frame callback here if we have an external callback
+				if (mExternalFrameCallback == null) {
+					mUVCCamera.setFrameCallback(null, 0);
+				}
 				// you should not wait here
 				callOnStopRecording();
 			}
@@ -615,8 +636,20 @@ abstract class AbstractUVCCameraHandler extends Handler {
 					videoEncoder.frameAvailableSoon();
 					videoEncoder.encode(frame);
 				}
+				if (mExternalFrameCallback != null) {
+					mExternalFrameCallback.onFrame(frame);
+				}
 			}
 		};
+
+		public void handleSetFrameCallback(final IFrameCallback callback) {
+			if (DEBUG) Log.v(TAG_THREAD, "handleSetFrameCallback:" + callback);
+			mExternalFrameCallback = callback;
+			if (mUVCCamera != null) {
+				// Re-set the callback to ensure it's active
+				mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
+			}
+		}
 
 		public void handleUpdateMedia(final String path) {
 			if (DEBUG) Log.v(TAG_THREAD, "handleUpdateMedia:path=" + path);

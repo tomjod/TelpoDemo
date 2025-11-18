@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.dagger.hilt)
 }
 
 android {
@@ -19,7 +20,7 @@ android {
 
 	defaultConfig {
 		applicationId "com.mundosvirtuales.telpoapp"
-		minSdkVersion 21
+		minSdkVersion 23
 		//noinspection OldTargetApi
 		targetSdkVersion 35
 		versionCode 1
@@ -48,7 +49,6 @@ android {
     }
 
     composeOptions {
-        //kotlinCompilerExtensionVersion = "1.5.11"
     }
 
     kotlin {
@@ -104,4 +104,8 @@ dependencies {
     // Scale and Printer SDK
     implementation files('libs/AclasScaleSdk.jar')
     implementation files('libs/icod_3.1.8.jar')
+
+    // Hilt
+    implementation libs.hilt.android
+    ksp libs.hilt.android.compiler
 }

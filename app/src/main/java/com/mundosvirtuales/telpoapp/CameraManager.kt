@@ -4,20 +4,32 @@ package com.mundosvirtuales.telpoapp
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.hardware.usb.UsbDevice
 import android.util.Log
 import android.view.Surface
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.mundosvirtuales.telpo.data.detector.YoloDetector
 import com.mundosvirtuales.telpoapp.ui.CameraState
 import com.serenegiant.usb.CameraDialog
+import com.serenegiant.usb.IFrameCallback
 import com.serenegiant.usb.USBMonitor
 import com.serenegiant.usb.UVCCamera
 import com.serenegiant.usbcameracommon.UVCCameraHandler
 import com.serenegiant.widget.CameraViewInterface
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 // Re-usa tus constantes
 private const val PREVIEW_WIDTH = 640
@@ -26,10 +38,9 @@ private const val PREVIEW_MODE = 1
 private const val USE_SURFACE_ENCODER = false
 private const val TAG = "CameraManager"
 
-
 /**
- * Esta clase maneja toda la lógica de USBMonitor y UVCCameraHandler.
- * Es un observador del ciclo de vida para registrarse y liberarse automáticamente.
+ * Esta clase maneja toda la lógica de USBMonitor y UVCCameraHandler. Es un observador del ciclo de
+ * vida para registrarse y liberarse automáticamente.
  */
 class CameraManager(private val context: Context) : DefaultLifecycleObserver {
 
@@ -38,6 +49,9 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
     private var mUSBMonitor: USBMonitor? = null
     private var mCameraHandler: UVCCameraHandler? = null
     private var mUVCCameraView: CameraViewInterface? = null
+    private val detector = YoloDetector(context)
+    private val processingScope = CoroutineScope(Dispatchers.Default)
+    private var isProcessingFrame = false
 
     // --- Estado Interno Explotado como Flow ---
     private val _uiState = MutableStateFlow(CameraState())
@@ -49,6 +63,9 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
         if (isDebuggable) Log.v(TAG, "onCreate:")
         mUSBMonitor = USBMonitor(context, mOnDeviceConnectListener)
         // El mCameraHandler se crea CUANDO la vista esté lista
+
+        // Initialize detector
+        processingScope.launch { detector.initialize() }
     }
 
     override fun onStart(owner: LifecycleOwner) {
@@ -71,30 +88,31 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
         mCameraHandler = null
         mUSBMonitor?.destroy()
         mUSBMonitor = null
+        detector.close()
     }
 
-    /**
-     * Paso clave: La UI de Compose nos pasa la vista cuando está lista.
-     */
+    /** Paso clave: La UI de Compose nos pasa la vista cuando está lista. */
     fun setCameraView(view: CameraViewInterface) {
         if (isDebuggable) Log.v(TAG, "setCameraView (CameraViewInterface) Seteada")
         mUVCCameraView = view
         mUVCCameraView?.setAspectRatio((PREVIEW_WIDTH / PREVIEW_HEIGHT.toFloat()).toDouble())
 
         // Ahora que tenemos la vista, creamos el Handler
-        mCameraHandler = UVCCameraHandler.createHandler(
-            context as Activity?, mUVCCameraView,
-            if (USE_SURFACE_ENCODER) 0 else 1,
-            PREVIEW_WIDTH, PREVIEW_HEIGHT, PREVIEW_MODE
-        )
+        mCameraHandler =
+                UVCCameraHandler.createHandler(
+                        context as Activity?,
+                        mUVCCameraView,
+                        if (USE_SURFACE_ENCODER) 0 else 1,
+                        PREVIEW_WIDTH,
+                        PREVIEW_HEIGHT,
+                        PREVIEW_MODE
+                )
     }
 
     // --- 2. Lógica de Control (API Pública) ---
 
     fun setCameraViewOnStart(usbMonitor: USBMonitor) {
-        if (usbMonitor.isRegistered && usbMonitor.deviceList.isNotEmpty()) {
-
-        }
+        if (usbMonitor.isRegistered && usbMonitor.deviceList.isNotEmpty()) {}
     }
     fun getUSBMonitor(): USBMonitor? = mUSBMonitor
 
@@ -106,7 +124,9 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
 
     fun toggleCamera(isChecked: Boolean) {
         if (isChecked && mCameraHandler?.isOpened == false) {
-            CameraDialog.showDialog(context as MainActivity) // Requiere que la Activity sea el contexto
+            CameraDialog.showDialog(
+                    context as MainActivity
+            ) // Requiere que la Activity sea el contexto
         } else {
             mCameraHandler?.close()
             _uiState.update { it.copy() }
@@ -119,7 +139,11 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
 
         if (mCameraHandler?.isRecording == false) {
             mCameraHandler?.startRecording()
-            _uiState.update { it.copy(isRecording = true,) }
+            _uiState.update {
+                it.copy(
+                        isRecording = true,
+                )
+            }
         } else {
             mCameraHandler?.stopRecording()
             _uiState.update { it.copy() }
@@ -143,10 +167,7 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
         val st = mUVCCameraView?.surfaceTexture ?: return
         try {
             mCameraHandler?.startPreview(Surface(st))
-            _uiState.update { it.copy(
-                captureButtonVisible = true,
-                toolsLayoutVisible = true
-            )}
+            _uiState.update { it.copy(captureButtonVisible = true, toolsLayoutVisible = true) }
             updateItems()
         } catch (e: Exception) {
             _uiState.update { it.copy() }
@@ -158,37 +179,90 @@ class CameraManager(private val context: Context) : DefaultLifecycleObserver {
         val isActive = mCameraHandler?.isOpened == true
         _uiState.update {
             it.copy(
-                toolsLayoutVisible = isActive,
-                supportsBrightness = mCameraHandler?.checkSupportFlag(UVCCamera.PU_BRIGHTNESS.toLong()) == true,
-                supportsContrast = mCameraHandler?.checkSupportFlag(UVCCamera.PU_CONTRAST.toLong()) == true
+                    toolsLayoutVisible = isActive,
+                    supportsBrightness =
+                            mCameraHandler?.checkSupportFlag(UVCCamera.PU_BRIGHTNESS.toLong()) ==
+                                    true,
+                    supportsContrast =
+                            mCameraHandler?.checkSupportFlag(UVCCamera.PU_CONTRAST.toLong()) == true
             )
         }
     }
 
-    private val mOnDeviceConnectListener = object : USBMonitor.OnDeviceConnectListener {
-        override fun onAttach(device: UsbDevice) { /* ... */ }
+    private val mOnDeviceConnectListener =
+            object : USBMonitor.OnDeviceConnectListener {
+                override fun onAttach(device: UsbDevice) {
+                    /* ... */
+                }
 
-        override fun onConnect(device: UsbDevice, ctrlBlock: USBMonitor.UsbControlBlock, createNew: Boolean) {
+                override fun onConnect(
+                        device: UsbDevice,
+                        ctrlBlock: USBMonitor.UsbControlBlock,
+                        createNew: Boolean
+                ) {
+                    try {
+                        mCameraHandler?.open(ctrlBlock)
+                        startPreview()
+                        updateItems()
+                        mCameraHandler?.setFrameCallback(frameCallback)
+                        _uiState.update {
+                            it.copy(
+                                    isCameraOn = true,
+                            )
+                        } // ¡Importante!
+                    } catch (e: Exception) {
+                        _uiState.update { it.copy() }
+                    }
+                }
+
+                override fun onDisconnect(
+                        device: UsbDevice,
+                        ctrlBlock: USBMonitor.UsbControlBlock
+                ) {
+                    mCameraHandler?.close()
+                    _uiState.update { it.copy() }
+                    updateItems()
+                }
+
+                override fun onDettach(device: UsbDevice) {
+                    /* ... */
+                }
+
+                override fun onCancel(device: UsbDevice) {
+                    _uiState.update { it.copy() }
+                }
+            }
+
+    private val frameCallback = IFrameCallback { frame ->
+        if (isProcessingFrame) return@IFrameCallback
+        isProcessingFrame = true
+
+        processingScope.launch {
             try {
-                mCameraHandler?.open(ctrlBlock)
-                startPreview()
-                updateItems()
-                _uiState.update { it.copy(isCameraOn = true,) } // ¡Importante!
+                // NV21 to Bitmap
+                val bitmap = nv21ToBitmap(frame, PREVIEW_WIDTH, PREVIEW_HEIGHT)
+
+                // Detect
+                val results = detector.detect(bitmap)
+
+                // Update State
+                _uiState.update { it.copy(detections = results) }
             } catch (e: Exception) {
-                _uiState.update { it.copy() }
+                Log.e(TAG, "Error processing frame", e)
+            } finally {
+                isProcessingFrame = false
             }
         }
+    }
 
-        override fun onDisconnect(device: UsbDevice, ctrlBlock: USBMonitor.UsbControlBlock) {
-            mCameraHandler?.close()
-            _uiState.update { it.copy() }
-            updateItems()
-        }
+    private fun nv21ToBitmap(byteBuffer: ByteBuffer, width: Int, height: Int): Bitmap {
+        val data = ByteArray(byteBuffer.remaining())
+        byteBuffer.get(data)
 
-        override fun onDettach(device: UsbDevice) { /* ... */ }
-
-        override fun onCancel(device: UsbDevice) {
-            _uiState.update { it.copy() }
-        }
+        val yuvImage = YuvImage(data, ImageFormat.NV21, width, height, null)
+        val out = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+        val imageBytes = out.toByteArray()
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 }
