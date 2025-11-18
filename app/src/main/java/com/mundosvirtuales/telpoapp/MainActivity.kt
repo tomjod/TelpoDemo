@@ -29,10 +29,7 @@ class MainActivity : ComponentActivity(), CameraDialogParent {
 
         // 3. Setear el contenido de Compose
         setContent {
-            // Aquí iría tu Composable principal
-            // (Usando el 'CameraScreen' de tu pregunta anterior)
 
-            // Asegúrate de que tu tema de Material esté aplicado
             // MaterialTheme {
             CameraScreen(viewModel = viewModel)
             // }

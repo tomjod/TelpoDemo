@@ -27,7 +27,6 @@ private const val USE_SURFACE_ENCODER = false
 private const val TAG = "CameraManager"
 
 
-
 /**
  * Esta clase maneja toda la lógica de USBMonitor y UVCCameraHandler.
  * Es un observador del ciclo de vida para registrarse y liberarse automáticamente.
